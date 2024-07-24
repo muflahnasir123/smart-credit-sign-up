@@ -39,12 +39,8 @@ export const CreateCustomer = ({ handleNext }) => {
   const handleSubmit = async (event) => {
     event.preventDefault();
     const data = new FormData(event.currentTarget);
-    console.log({
-      email: data.get("email"),
-      password: data.get("password"),
-    });
 
-    const options = {
+    const validOption = {
       method: "POST",
       headers: {
         accept: "application/json",
@@ -54,20 +50,40 @@ export const CreateCustomer = ({ handleNext }) => {
         clientKey: import.meta.env.VITE_APP_SIGNUP_API_KEY,
         trackingToken: localStorage.getItem("trackingToken"),
         email: data.get("email"),
-        password: data.get("password"),
-        firstName: data.get("firstName"),
-        lastName: data.get("lastName"),
       }),
     };
 
-    let startingPass = await fetch(
-      `${import.meta.env.VITE_APP_SIGNUP_API_URL}/customer/create`,
-      options
+    let validPass = await fetch(
+      `${import.meta.env.VITE_APP_SIGNUP_API_URL}/validate/email`,
+      validOption
     );
-    const customer = await startingPass.json();
-    if (startingPass.status === 201) {
-      localStorage.setItem("customerToken", customer.customerToken);
-      handleNext(1);
+
+    if (validPass.status === 200) {
+      const options = {
+        method: "POST",
+        headers: {
+          accept: "application/json",
+          "content-type": "application/x-www-form-urlencoded",
+        },
+        body: new URLSearchParams({
+          clientKey: import.meta.env.VITE_APP_SIGNUP_API_KEY,
+          trackingToken: localStorage.getItem("trackingToken"),
+          email: data.get("email"),
+          password: data.get("password"),
+          firstName: data.get("firstName"),
+          lastName: data.get("lastName"),
+        }),
+      };
+
+      let startingPass = await fetch(
+        `${import.meta.env.VITE_APP_SIGNUP_API_URL}/customer/create`,
+        options
+      );
+      const customer = await startingPass.json();
+      if (startingPass.status === 201) {
+        localStorage.setItem("customerToken", customer.customerToken);
+        handleNext(1);
+      }
     }
   };
 
@@ -87,27 +103,6 @@ export const CreateCustomer = ({ handleNext }) => {
         </Typography>
         <Box component="form" noValidate onSubmit={handleSubmit} sx={{ mt: 3 }}>
           <Grid container spacing={2}>
-            <Grid item xs={12} sm={6}>
-              <TextField
-                autoComplete="given-name"
-                name="firstName"
-                required
-                fullWidth
-                id="firstName"
-                label="First Name"
-                autoFocus
-              />
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <TextField
-                required
-                fullWidth
-                id="lastName"
-                label="Last Name"
-                name="lastName"
-                autoComplete="family-name"
-              />
-            </Grid>
             <Grid item xs={12}>
               <TextField
                 required
